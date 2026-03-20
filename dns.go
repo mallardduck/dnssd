@@ -253,6 +253,24 @@ func remove(this []dns.RR, that []dns.RR) []dns.RR {
 						isUnknown = false
 					}
 				}
+			case *dns.A:
+				if ar, ok := thatRr.(*dns.A); ok {
+					if a.A.Equal(ar.A) && a.Hdr.Name == ar.Hdr.Name && a.Hdr.Ttl > ar.Hdr.Ttl/2 {
+						isUnknown = false
+					}
+				}
+			case *dns.AAAA:
+				if aaaa, ok := thatRr.(*dns.AAAA); ok {
+					if a.AAAA.Equal(aaaa.AAAA) && a.Hdr.Name == aaaa.Hdr.Name && a.Hdr.Ttl > aaaa.Hdr.Ttl/2 {
+						isUnknown = false
+					}
+				}
+			case *dns.NSEC:
+				if nsec, ok := thatRr.(*dns.NSEC); ok {
+					if a.Hdr.Name == nsec.Hdr.Name && reflect.DeepEqual(a.TypeBitMap, nsec.TypeBitMap) && a.Hdr.Ttl > nsec.Hdr.Ttl/2 {
+						isUnknown = false
+					}
+				}
 			}
 		}
 
