@@ -266,6 +266,24 @@ func (s *Service) IPsAtInterface(iface *net.Interface) []net.IP {
 		}
 	}
 
+	// Fall back to IPs from all service interfaces when the query interface
+	// has no addresses. This handles Linux multi-NIC setups (macvlan, Docker
+	// bridge networks) where the query arrives on a different interface than
+	// the one holding the service IP, causing iface.Addrs() to return empty.
+	if len(ips) == 0 {
+		for _, fallbackIface := range s.Interfaces() {
+			fallbackAddrs, err := fallbackIface.Addrs()
+			if err != nil {
+				continue
+			}
+			for _, addr := range fallbackAddrs {
+				if ip, _, err := net.ParseCIDR(addr.String()); err == nil && !s.blocks(ip) {
+					ips = append(ips, ip)
+				}
+			}
+		}
+	}
+
 	return ips
 }
 
